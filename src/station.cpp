@@ -2,51 +2,42 @@
 #include "../include/module.h"
 #include <stdexcept>
 #include <algorithm>
+#include <utility>
 
 Station::Station(const size_t maxModules) {
     if (maxModules == 0) {
         throw std::invalid_argument("Ошибка: максимальное количество модулей должно быть больше нуля.");
     }
-
-    maxModules_ =  maxModules;
+    maxModules_ = maxModules;
 }
 
 Station::Station(const Station& other) : maxModules_(other.maxModules_) {
     modules_.reserve(other.modules_.size());
     for (const auto& module : other.modules_) {
-        modules_.push_back(std::unique_ptr<Module>(module->clone()));
+        modules_.push_back(module->clone());
     }
 }
 
 Station& Station::operator=(const Station& other) {
-    if (this == &other) {
-        return *this;
+    if (this != &other) {
+        Station temp(other);
+        std::swap(modules_, temp.modules_);
+        std::swap(maxModules_, temp.maxModules_);
     }
-
-    maxModules_ = other.maxModules_;
-    modules_.clear();
-
-    modules_.reserve(other.modules_.size());
-    for (const auto& module : other.modules_) {
-        modules_.push_back(std::unique_ptr<Module>(module->clone()));
-    }
-
     return *this;
 }
 
-Station::Station(Station&& other) noexcept : modules_(std::move(other.modules_)), maxModules_(other.maxModules_) {
+Station::Station(Station&& other) noexcept
+    : modules_(std::move(other.modules_)), maxModules_(other.maxModules_) {
     other.maxModules_ = 0;
 }
 
 Station& Station::operator=(Station&& other) noexcept {
-    if (this == &other) {
-        return *this;
+    if (this != &other) {
+        modules_ = std::move(other.modules_);
+        maxModules_ = other.maxModules_;
+        other.maxModules_ = 0;
     }
-
-    modules_ = std::move(other.modules_);
-    maxModules_ = other.maxModules_;
-    other.maxModules_ = 0;
-
     return *this;
 }
 
@@ -56,13 +47,13 @@ void Station::addModule(std::unique_ptr<Module> module) {
     }
 
     if (modules_.size() >= maxModules_) {
-        throw std::invalid_argument("Ошибка: превышен лимит модулей на станции.");
+        throw std::length_error("Ошибка: превышен лимит модулей на станции.");
     }
 
     modules_.push_back(std::move(module));
 }
 
-Module* Station::findById(int id) {
+Module* Station::findById(const int id) {
     const auto iter = std::ranges::find_if(modules_,
         [id](const std::unique_ptr<Module>& module) {
             return module->getId() == id;
@@ -75,7 +66,7 @@ Module* Station::findById(int id) {
     return nullptr;
 }
 
-void Station::removeById(int id) {
+void Station::removeById(const int id) {
     const auto iter = std::ranges::find_if(modules_,
         [id](const std::unique_ptr<Module>& module) {
             return module->getId() == id;
@@ -96,7 +87,7 @@ void Station::removeByIndex(const size_t index) {
 
 void Station::moveModule(const size_t fromIndex, const size_t toIndex) {
     if (fromIndex >= modules_.size() || toIndex >= modules_.size()) {
-        throw std::out_of_range("Ошибка: индекс выходят за границы вектора.");
+        throw std::out_of_range("Ошибка: индекс выходит за границы вектора.");
     }
 
     if (fromIndex == toIndex) {
@@ -107,17 +98,6 @@ void Station::moveModule(const size_t fromIndex, const size_t toIndex) {
     modules_.erase(modules_.begin() + static_cast<std::ptrdiff_t>(fromIndex));
     modules_.insert(modules_.begin() + static_cast<std::ptrdiff_t>(toIndex), std::move(moduleToMove));
 }
-
-// void Station::moveModule(const size_t fromIndex, const size_t toIndex) {
-//     if (fromIndex >= modules_.size() || toIndex >= modules_.size()) {
-//         throw std::out_of_range("Ошибка: индекс выходит за границы.");
-//     }
-//     if (fromIndex < toIndex) {
-//         std::ranges::rotate(modules_.begin() + fromIndex, modules_.begin() + fromIndex + 1, modules_.begin() + toIndex + 1);
-//     } else if (fromIndex > toIndex) {
-//         std::ranges::rotate(modules_.begin() + toIndex, modules_.begin() + fromIndex, modules_.begin() + fromIndex + 1);
-//     }
-// }
 
 void Station::sortByEfficiency() {
     std::ranges::sort(modules_.begin(), modules_.end(),

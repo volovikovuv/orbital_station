@@ -7,7 +7,7 @@ std::unique_ptr<Module> CrewCabin::clone() {
     return std::make_unique<CrewCabin>(*this);
 }
 
-std::string CrewCabin::getType() {
+std::string CrewCabin::getType() const {
     return "CrewCabin";
 }
 
@@ -15,7 +15,7 @@ std::unique_ptr<Module> MedicalCabin::clone() {
     return std::make_unique<MedicalCabin>(*this);
 }
 
-std::string MedicalCabin::getType() {
+std::string MedicalCabin::getType() const {
     return "MedicalCabin";
 }
 
@@ -25,7 +25,7 @@ std::unique_ptr<Module> SolarModule::clone() {
     return std::make_unique<SolarModule>(*this);
 }
 
-std::string SolarModule::getType() {
+std::string SolarModule::getType() const {
     return "SolarModule";
 }
 
@@ -33,7 +33,7 @@ std::unique_ptr<Module> ReactorModule::clone() {
     return std::make_unique<ReactorModule>(*this);
 }
 
-std::string ReactorModule::getType() {
+std::string ReactorModule::getType() const {
     return "ReactorModule";
 }
 
@@ -43,7 +43,7 @@ std::unique_ptr<Module> BiologyLab::clone() {
     return std::make_unique<BiologyLab>(*this);
 }
 
-std::string BiologyLab::getType() {
+std::string BiologyLab::getType() const {
     return "BiologyLab";
 }
 
@@ -51,6 +51,6 @@ std::unique_ptr<Module> PhysicsLab::clone() {
     return std::make_unique<PhysicsLab>(*this);
 }
 
-std::string PhysicsLab::getType() {
+std::string PhysicsLab::getType() const {
     return "PhysicsLab";
 }

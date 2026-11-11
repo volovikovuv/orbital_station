@@ -1,147 +1,75 @@
 #include <iostream>
+#include <memory>
 #include <windows.h>
-#include "../include/station.h"
+#include "../include/command_center.h"
 #include "../include/module_factory.h"
+#include "../include/environment.h"
+#include "../include/external_object.h"
 
-static void printStation(Station& station, const std::string& title) {
-    std::cout << std::endl << title << ":" << std::endl;
-
-    if (station.begin() == station.end()) {
-        std::cout << "[Станция пуста]" << std::endl;
-    } else {
-        for (auto& iter : station) {
-            std::cout << "[ID: " << iter.getId() << "] "
-                      << "Тип: " << iter.getType()
-                      << " | Эффективность: " << iter.getEfficiency()
-                      << " | Статус: " << iter.getStateString()
-                      << std::endl;
-        }
-    }
-}
-
-static void runScenario1() {
-    std::cout << std::endl
-              << "--- Сценарий 1: создание станции, добавление модулей через разные фабрики, вывод списка через итератор ---"
-              << std::endl;
-
-    Station StationS1(5);
+static void runScenario1(CommandCenter& center) {
+    std::cout << "\n--- Сценарий 1: создание командного центра, добавление модулей, установка EarthOrbit ---" << std::endl;
 
     StandardModuleFactory stdFactory;
     AdvancedModuleFactory advFactory;
 
-    StationS1.addModule(stdFactory.createResidentialModule("Жилой отсек Альфа", 80));
-    StationS1.addModule(stdFactory.createEnergyModule("Солнечная панель 1", 90));
-    StationS1.addModule(advFactory.createResearchModule("Квантовая лаборатория", 100));
+    center.addModule(stdFactory.createResidentialModule("Жилой отсек Альфа", 80));
+    center.addModule(stdFactory.createEnergyModule("Солнечная панель 1", 90));
+    center.addModule(advFactory.createResearchModule("Физическая лаборатория", 100));
 
-    printStation(StationS1, "Станция после добавления модулей");
+    for (size_t i = 0; i < center.getModuleCount(); ++i) {
+        if (auto* mod = center.getModuleAt(i)) {
+            mod->activate();
+        }
+    }
+
+    if (auto* energyMod = center.getModuleAt(1); auto* crewMod = center.getModuleAt(0)) {
+        if (energyMod && crewMod) {
+            energyMod->transferEnergyTo(*crewMod, 10);
+        }
+    }
+
+    center.setEnvironment(std::make_shared<EarthOrbit>());
+    center.applyEnvironmentEffects();
+    center.printStatistics("Статистика после Сценария 1 (EarthOrbit)");
 }
 
-static void runScenario2() {
-    std::cout << std::endl
-              << "--- Сценарий 2: копирование станции, изменение модулей в копии, проверка независимости оригинальной станции ---"
-              << std::endl;
+static void runScenario2(CommandCenter& center) {
+    std::cout << "\n--- Сценарий 2: смена окружения на DeepSpace, работа EnvironmentProxy и уведомления ---" << std::endl;
 
-    Station originalStation(3);
-    StandardModuleFactory factory;
+    center.setEnvironment(std::make_shared<DeepSpace>());
+    center.applyEnvironmentEffects();
 
-    originalStation.addModule(factory.createResidentialModule("Жилой отсек 'Оригинал'", 75));
+    std::cout << "\n[Повторный вызов для демонстрации кеширования в EnvironmentProxy]:" << std::endl;
+    center.applyEnvironmentEffects();
 
-    Station copiedStation = originalStation;
-
-    if (const auto iter = copiedStation.begin(); iter != copiedStation.end()) {
-        iter->setState(ModuleState::Repair);
-    }
-
-    printStation(originalStation, "Оригинальная станция");
-    printStation(copiedStation, "Скопированная станция");
+    center.printStatistics("Статистика после Сценария 2 (DeepSpace)");
 }
 
-static void runScenario3() {
-    std::cout << std::endl
-              << "--- Сценарий 3: перемещение станции через конструктор перемещения, проверка отсутствия копирования ---"
-              << std::endl;
+static void runScenario3(CommandCenter& center) {
+    std::cout << "\n--- Сценарий 3: появление SolarStorm, урон через operator-, уведомление CommandCenter ---" << std::endl;
 
-    Station tempStation(2);
-    StandardModuleFactory factory;
+    SolarStorm storm(25);
+    center.interactWith(storm, 0);
 
-    tempStation.addModule(factory.createEnergyModule("Временный генератор", 50));
-    tempStation.addModule(factory.createResidentialModule("Жилой отсек 'Оригинал'", 65));
-
-    printStation(tempStation, "Старая станция (до перемещения)");
-
-    Station newStation = std::move(tempStation);
-
-    printStation(tempStation, "Старая станция (после перемещения)");
-    printStation(newStation, "Новая станция (после перемещения)");
+    center.printStatistics("Статистика после Сценария 3 (SolarStorm)");
 }
 
-static void runScenario4() {
-    std::cout << std::endl
-              << "--- Сценарий 4: итерация по модулям, активация, деактивация, смена состояния, перемещение модуля внутри станции ---"
-              << std::endl;
+static void runScenario4(CommandCenter& center) {
+    std::cout << "\n--- Сценарий 4: появление CargoContainer, пополнение ресурсов через operator+ ---" << std::endl;
 
-    Station StationS4(3);
-    StandardModuleFactory factory;
+    CargoContainer cargo(120);
+    center.interactWith(cargo, 0);
 
-    StationS4.addModule(factory.createResidentialModule("Отсек 1", 80));
-    StationS4.addModule(factory.createEnergyModule("Генератор 1", 95));
-    StationS4.addModule(factory.createResearchModule("Лаборатория 1", 100));
-
-    printStation(StationS4, "Исходное состояние модулей");
-
-    auto iter = StationS4.begin();
-
-    if (iter != StationS4.end()) {
-        iter->activate();
-        ++iter;
-    }
-
-    if (iter != StationS4.end()) {
-        iter->deactivate();
-        ++iter;
-    }
-
-    if (iter != StationS4.end()) {
-        iter->setState(ModuleState::Emergency);
-    }
-
-    printStation(StationS4, "После изменения состояний");
-
-    StationS4.moveModule(0, 2);
-
-    printStation(StationS4, "Перемещаем модуль с индекса 0 на индекс 2");
+    center.printStatistics("Статистика после Сценария 4 (CargoContainer)");
 }
 
-static void runScenario5() {
-    std::cout << std::endl
-              << "--- Сценарий 5: удаление модулей по ID и индексу, проверка ограничения максимального количества ---"
-              << std::endl;
+static void runScenario5(CommandCenter& center) {
+    std::cout << "\n--- Сценарий 5: появление SpaceAnomaly, случайный эффект через operator* ---" << std::endl;
 
-    Station station(2);
-    StandardModuleFactory factory;
+    SpaceAnomaly anomaly(2);
+    center.interactWith(anomaly, 1);
 
-    station.addModule(factory.createResidentialModule("Отсек A", 80));
-    station.addModule(factory.createEnergyModule("Генератор B", 90));
-
-    printStation(station, "Станция заполнена максимальным количеством модулей");
-
-    try {
-        std::cout << std::endl << "Попытка добавить модуль:" << std::endl;
-        station.addModule(factory.createResearchModule("Лаборатория C", 100));
-    } catch (const std::exception& e) {
-        std::cout << "Перехвачено ожидаемое исключение: " << e.what() << std::endl;
-    }
-
-    if (station.begin() != station.end()) {
-        const int idToRemove = station.begin()->getId();
-        station.removeById(idToRemove);
-
-        printStation(station, "Станция после удаления модуля с ID " + std::to_string(idToRemove));
-    }
-
-    station.removeByIndex(0);
-
-    printStation(station, "Станция после удаления модуля с индексом 0");
+    center.printStatistics("Статистика после Сценария 5 (SpaceAnomaly)");
 }
 
 int main() {
@@ -149,13 +77,15 @@ int main() {
     SetConsoleOutputCP(CP_UTF8);
 
     try {
-        runScenario1();
-        runScenario2();
-        runScenario3();
-        runScenario4();
-        runScenario5();
+        CommandCenter stationCenter(5, 500, 300, 10);
+
+        runScenario1(stationCenter);
+        runScenario2(stationCenter);
+        runScenario3(stationCenter);
+        runScenario4(stationCenter);
+        runScenario5(stationCenter);
     } catch (const std::exception& e) {
-        std::cerr << std::endl << "Критическая ошибка выполнения: " << e.what() << std::endl;
+        std::cerr << "\nКритическая ошибка выполнения: " << e.what() << std::endl;
     }
 
     return 0;
