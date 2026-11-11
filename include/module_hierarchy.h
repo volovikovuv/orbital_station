@@ -25,7 +25,7 @@ public:
     using ResidentialModule::ResidentialModule;
 
     [[nodiscard]] std::unique_ptr<Module> clone() override;
-    [[nodiscard]] std::string getType() override;
+    [[nodiscard]] std::string getType() const override;
 };
 
 class MedicalCabin : public ResidentialModule {
@@ -33,7 +33,7 @@ public:
     using ResidentialModule::ResidentialModule;
 
     [[nodiscard]] std::unique_ptr<Module> clone() override;
-    [[nodiscard]] std::string getType() override;
+    [[nodiscard]] std::string getType() const override;
 };
 
 class SolarModule : public EnergyModule {
@@ -41,7 +41,7 @@ public:
     using EnergyModule::EnergyModule;
 
     [[nodiscard]] std::unique_ptr<Module> clone() override;
-    [[nodiscard]] std::string getType() override;
+    [[nodiscard]] std::string getType() const override;
 };
 
 class ReactorModule : public EnergyModule {
@@ -49,7 +49,7 @@ public:
     using EnergyModule::EnergyModule;
 
     [[nodiscard]] std::unique_ptr<Module> clone() override;
-    [[nodiscard]] std::string getType() override;
+    [[nodiscard]] std::string getType() const override;
 };
 
 class BiologyLab : public ResearchModule {
@@ -57,7 +57,7 @@ public:
     using ResearchModule::ResearchModule;
 
     [[nodiscard]] std::unique_ptr<Module> clone() override;
-    [[nodiscard]] std::string getType() override;
+    [[nodiscard]] std::string getType() const override;
 };
 
 class PhysicsLab : public ResearchModule {
@@ -65,5 +65,5 @@ public:
     using ResearchModule::ResearchModule;
 
     [[nodiscard]] std::unique_ptr<Module> clone() override;
-    [[nodiscard]] std::string getType() override;
+    [[nodiscard]] std::string getType() const override;
 };
