@@ -5,7 +5,6 @@
 #include <memory>
 #include <ctime>
 
-// Событие модуля для паттерна «Наблюдатель»
 struct ModuleEvent {
     std::string type;
     int moduleId{0};
@@ -13,19 +12,15 @@ struct ModuleEvent {
     std::time_t timestamp{0};
 };
 
-// Интерфейс наблюдателя
 class IObserver {
 public:
     virtual ~IObserver() = default;
-
     virtual void onModuleEvent(const ModuleEvent& event) = 0;
 };
 
-// Интерфейс наблюдаемого объекта
 class IObservable {
 public:
     virtual ~IObservable() = default;
-
     virtual void subscribe(IObserver* observer) = 0;
     virtual void unsubscribe(IObserver* observer) = 0;
     virtual void notify(const ModuleEvent& event) = 0;
@@ -53,6 +48,7 @@ protected:
 
     std::shared_ptr<const ModuleTypeInfo> typeInfo_;
     std::vector<IObserver*> observers_;
+
 public:
     Module(std::string name, int efficiency, ModuleState state,
            std::shared_ptr<const ModuleTypeInfo> typeInfo = nullptr);
@@ -66,17 +62,25 @@ public:
     void unsubscribe(IObserver* observer) override;
     void notify(const ModuleEvent& event) override;
 
-    void activate();
+    bool activate();
     void deactivate();
     void setState(ModuleState newState);
     void moveToIndex(int index);
+    void repair(int amount);
+    void setEnergyConsumption(int amount);
 
     void transferEnergyTo(Module& target, int amount);
 
-    [[nodiscard]] int getEfficiency() const;
     [[nodiscard]] int getId() const;
+    [[nodiscard]] const std::string& getName() const;
+    [[nodiscard]] int getEfficiency() const;
+    [[nodiscard]] int getHealth() const;
+    [[nodiscard]] int getEnergyConsumption() const;
+    [[nodiscard]] int getCapacity() const;
+    [[nodiscard]] int getPosition() const;
+    [[nodiscard]] bool isActive() const;
+    [[nodiscard]] ModuleState getState() const;
     [[nodiscard]] std::shared_ptr<const ModuleTypeInfo> getTypeInfo() const;
-
     [[nodiscard]] std::string getStateString() const;
 
     friend Module& operator-(Module& module, const Damage& damage);

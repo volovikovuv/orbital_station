@@ -24,4 +24,13 @@ add_executable(orbital_station
         src/environment.cpp
         src/interaction_strategy.cpp
         src/external_object.cpp
-        src/command_center.cpp)
+        src/command_center.cpp
+        include/station_facade.h
+        include/command.h
+        include/station_mediator.h
+        include/command_handler.h
+        src/station_mediator.cpp
+        src/command.cpp
+        src/station_facade.cpp
+        src/command_handler.cpp
+)

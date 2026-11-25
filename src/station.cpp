@@ -1,8 +1,13 @@
 #include "../include/station.h"
-#include "../include/module.h"
 #include <stdexcept>
 #include <algorithm>
 #include <utility>
+
+void Station::syncPositions() {
+    for (size_t i = 0; i < modules_.size(); ++i) {
+        modules_[i]->moveToIndex(static_cast<int>(i));
+    }
+}
 
 Station::Station(const size_t maxModules) {
     if (maxModules == 0) {
@@ -16,6 +21,7 @@ Station::Station(const Station& other) : maxModules_(other.maxModules_) {
     for (const auto& module : other.modules_) {
         modules_.push_back(module->clone());
     }
+    syncPositions();
 }
 
 Station& Station::operator=(const Station& other) {
@@ -51,6 +57,7 @@ void Station::addModule(std::unique_ptr<Module> module) {
     }
 
     modules_.push_back(std::move(module));
+    syncPositions();
 }
 
 Module* Station::findById(const int id) {
@@ -59,11 +66,31 @@ Module* Station::findById(const int id) {
             return module->getId() == id;
         });
 
-    if (iter != modules_.end()) {
-        return iter->get();
-    }
+    return (iter != modules_.end()) ? iter->get() : nullptr;
+}
 
-    return nullptr;
+const Module* Station::findById(const int id) const {
+    const auto iter = std::ranges::find_if(modules_,
+        [id](const std::unique_ptr<Module>& module) {
+            return module->getId() == id;
+        });
+
+    return (iter != modules_.end()) ? iter->get() : nullptr;
+}
+
+Module* Station::getModuleAt(const size_t index) const {
+    if (index >= modules_.size()) {
+        return nullptr;
+    }
+    return modules_[index].get();
+}
+
+size_t Station::getModuleCount() const {
+    return modules_.size();
+}
+
+size_t Station::getMaxModules() const {
+    return maxModules_;
 }
 
 void Station::removeById(const int id) {
@@ -74,6 +101,7 @@ void Station::removeById(const int id) {
 
     if (iter != modules_.end()) {
         modules_.erase(iter);
+        syncPositions();
     }
 }
 
@@ -83,6 +111,7 @@ void Station::removeByIndex(const size_t index) {
     }
 
     modules_.erase(modules_.begin() + static_cast<std::ptrdiff_t>(index));
+    syncPositions();
 }
 
 void Station::moveModule(const size_t fromIndex, const size_t toIndex) {
@@ -97,6 +126,7 @@ void Station::moveModule(const size_t fromIndex, const size_t toIndex) {
     auto moduleToMove = std::move(modules_[fromIndex]);
     modules_.erase(modules_.begin() + static_cast<std::ptrdiff_t>(fromIndex));
     modules_.insert(modules_.begin() + static_cast<std::ptrdiff_t>(toIndex), std::move(moduleToMove));
+    syncPositions();
 }
 
 void Station::sortByEfficiency() {
@@ -104,6 +134,7 @@ void Station::sortByEfficiency() {
         [](const std::unique_ptr<Module>& a, const std::unique_ptr<Module>& b) {
             return a->getEfficiency() > b->getEfficiency();
         });
+    syncPositions();
 }
 
 StationIterator Station::begin() {

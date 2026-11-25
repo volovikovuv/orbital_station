@@ -3,7 +3,6 @@
 #include "../include/command_center.h"
 #include "../include/module.h"
 
-// EarthOrbit
 void EarthOrbit::applyEffect(Module& module) {
     LoggingProxy::log(LogSource::ENV, "EarthOrbit: минимальное влияние на модуль " + module.getType());
 }
@@ -13,17 +12,19 @@ std::string EarthOrbit::getName() const {
 }
 
 double EarthOrbit::getEnergyModifier() const {
-    return 0.0;
+    return 1.0;
 }
 
 double EarthOrbit::getDamageModifier() const {
     return 0.0;
 }
 
-// DeepSpace
 void DeepSpace::applyEffect(Module& module) {
     module * getEnergyModifier();
     module - Damage{.amount = static_cast<int>(getDamageModifier()), .type = "Radiation"};
+    if (module.getState() == ModuleState::Emergency) {
+        return;
+    }
 
     if (const std::string type = module.getType(); type == "SolarModule") {
         EnergyModuleStrategy().apply(module);
@@ -48,9 +49,11 @@ double DeepSpace::getDamageModifier() const {
     return 5.0;
 }
 
-// AsteroidField
 void AsteroidField::applyEffect(Module& module) {
     module - Damage{.amount = static_cast<int>(getDamageModifier()), .type = "Physical"};
+    if (module.getState() == ModuleState::Emergency) {
+        return;
+    }
 
     if (const std::string type = module.getType(); type == "BiologyLab" || type == "PhysicsLab") {
         ResearchModuleStrategy().apply(module);
@@ -75,7 +78,6 @@ double AsteroidField::getDamageModifier() const {
     return 20.0;
 }
 
-// EnvironmentProxy
 EnvironmentProxy::EnvironmentProxy(std::shared_ptr<Environment> realEnvironment)
     : realEnvironment_(std::move(realEnvironment)) {}
 
@@ -118,7 +120,7 @@ std::string EnvironmentProxy::getName() const {
 }
 
 double EnvironmentProxy::getEnergyModifier() const {
-    return realEnvironment_ ? realEnvironment_->getEnergyModifier() : 0.0;
+    return realEnvironment_ ? realEnvironment_->getEnergyModifier() : 1.0;
 }
 
 double EnvironmentProxy::getDamageModifier() const {

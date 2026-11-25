@@ -8,17 +8,25 @@ class Station {
 private:
     std::vector<std::unique_ptr<Module>> modules_;
     size_t maxModules_;
+
+    void syncPositions();
+
 public:
     explicit Station(size_t maxModules);
 
-    Station(const Station& other); // конструктор копирования
-    Station& operator=(const Station& other); // оператор присваивания копированием
-    Station(Station&& other) noexcept ; // конструктор перемещения
-    Station& operator=(Station&& other) noexcept ; // оператор присваивания перемещением
+    Station(const Station& other);
+    Station& operator=(const Station& other);
+    Station(Station&& other) noexcept;
+    Station& operator=(Station&& other) noexcept;
     ~Station() = default;
 
     void addModule(std::unique_ptr<Module> module);
     Module* findById(int id);
+    [[nodiscard]] const Module* findById(int id) const;
+    [[nodiscard]] Module* getModuleAt(size_t index) const;
+    [[nodiscard]] size_t getModuleCount() const;
+    [[nodiscard]] size_t getMaxModules() const;
+
     void removeById(int id);
     void removeByIndex(size_t index);
     void moveModule(size_t fromIndex, size_t toIndex);

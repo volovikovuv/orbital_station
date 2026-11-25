@@ -12,7 +12,6 @@ std::string ExternalObject::getName() const {
     return type_;
 }
 
-// SolarStorm
 SolarStorm::SolarStorm(const int strength)
     : ExternalObject("SolarStorm", strength) {}
 
@@ -21,9 +20,12 @@ void SolarStorm::interact(CommandCenter& center, Module& module) {
 
     const int effectiveDamage = std::max(1, strength_ - center.getSafetyLevel());
     module - Damage{.amount = effectiveDamage, .type = "Radiation"};
+    if (module.getState() == ModuleState::Emergency) {
+        return;
+    }
+
     module * 0.8;
 
-    // Выбор стратегии воздействия солнечной бури по типу модуля
     if (const std::string type = module.getType(); type == "SolarModule") {
         EnergyModuleStrategy().apply(module);
     } else if (type == "CrewCabin" || type == "MedicalCabin") {
@@ -39,7 +41,6 @@ std::string SolarStorm::getName() const {
     return type_;
 }
 
-// MeteorShower
 MeteorShower::MeteorShower(const int strength)
     : ExternalObject("MeteorShower", strength) {}
 
@@ -53,7 +54,6 @@ std::string MeteorShower::getName() const {
     return type_;
 }
 
-// CargoContainer
 CargoContainer::CargoContainer(const int strength)
     : ExternalObject("CargoContainer", strength) {}
 
@@ -67,7 +67,6 @@ std::string CargoContainer::getName() const {
     return type_;
 }
 
-// SpaceAnomaly
 SpaceAnomaly::SpaceAnomaly(const int strength)
     : ExternalObject("SpaceAnomaly", strength) {}
 
@@ -77,7 +76,6 @@ void SpaceAnomaly::interact(CommandCenter& center, Module& module) {
 
     if (const int effect = dist(gen); effect == 0) {
         LoggingProxy::log(LogSource::OBJECT, "SpaceAnomaly: телепортация модуля " + module.getType());
-        module.moveToIndex(0);
         center.teleportModuleTo(module.getId(), 0);
         module * 1.0;
     } else if (effect == 1) {
